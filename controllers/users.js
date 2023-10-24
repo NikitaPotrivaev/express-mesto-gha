@@ -13,10 +13,13 @@ const getUserId = async (req, res) => {
   try {
     const { userId } = req.params;
     const user = await User.findById(userId);
-    res.send(user);
+    res.send({ user });
+    if (!user) {
+      res.status(404).send({ message: 'Пользователь не найден' });
+    }
   } catch (error) {
     if (error.name === 'CastError') {
-      res.status(400).send({ message: 'Отсутствует пользователь с таким id' });
+      res.status(404).send({ message: 'Отсутствует пользователь с таким id' });
     }
     res.status(500).send({ message: 'Ошибка на стороне сервера' });
   }
@@ -43,7 +46,7 @@ const updateUserData = async (req, res) => {
       { name, about },
       { new: true, runValidators: true },
     );
-    res.send(update);
+    res.send({ update });
   } catch (error) {
     if (error.name === 'ValidationError') {
       res.status(400).send({ message: 'Ошибка валидации полей', ...error });
@@ -60,7 +63,7 @@ const updateAvatar = async (req, res) => {
       { avatar },
       { new: true, runValidators: true },
     );
-    res.send(userAvatar);
+    res.send({ userAvatar });
   } catch (error) {
     if (error.name === 'ValidationError') {
       res.status(400).send({ message: 'Ошибка валидации полей', ...error });
