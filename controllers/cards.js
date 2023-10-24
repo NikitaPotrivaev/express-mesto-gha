@@ -24,10 +24,10 @@ const createCard = async (req, res) => {
 const deleteCardId = async (req, res) => {
   try {
     const cardId = await Card.findByIdAndDelete(req.params.cardId);
-    res.send({ cardId });
     if (!cardId) {
       res.status(404).send({ message: 'Отсутствует данная карточка' });
     }
+    res.send({ cardId });
   } catch (error) {
     if (error.name === 'CastError') {
       res.status(400).send({ message: 'Неверный id' });
@@ -43,10 +43,10 @@ const likeCard = async (req, res) => {
       { $addToSet: { likes: req.user._id } },
       { new: true },
     );
-    res.send({ like });
     if (!like) {
       res.status(404).send({ message: 'Отсутствует данная карточка' });
     }
+    res.send({ like });
   } catch (error) {
     if (error.name === 'CastError') {
       res.status(400).send({ message: 'Неверный id' });
@@ -62,10 +62,10 @@ const deleteLike = async (req, res) => {
       { $pull: { likes: req.user._id } },
       { new: true },
     );
-    res.send({ dislike });
     if (!dislike) {
       res.status(404).send({ message: 'Отсутствует данная карточка' });
     }
+    res.send({ dislike });
   } catch (error) {
     if (error.name === 'CastError') {
       res.status(400).send({ message: 'Неверные данные' });

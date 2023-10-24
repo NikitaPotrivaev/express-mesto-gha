@@ -13,13 +13,13 @@ const getUserId = async (req, res) => {
   try {
     const { userId } = req.params;
     const user = await User.findById(userId);
-    res.send({ user });
     if (!user) {
       res.status(404).send({ message: 'Пользователь не найден' });
     }
+    res.send({ user });
   } catch (error) {
     if (error.name === 'CastError') {
-      res.status(404).send({ message: 'Отсутствует пользователь с таким id' });
+      res.status(400).send({ message: 'Отсутствует пользователь с таким id' });
     }
     res.status(500).send({ message: 'Ошибка на стороне сервера' });
   }
