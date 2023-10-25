@@ -2,7 +2,7 @@ const User = require('../models/user');
 
 const getUsers = async (req, res) => {
   try {
-    const users = await User.find({}).orFail(new Error('Пользователи не найдены'));
+    const users = await User.find({});
     res.send(users);
   } catch (error) {
     res.status(500).send({ message: 'Ошибка на стороне сервера' });
@@ -31,7 +31,7 @@ const registerUser = async (req, res) => {
   try {
     const { name, about, avatar } = req.body;
     const newUser = new User({ name, about, avatar });
-    res.send(await newUser.save()).orFail(new Error('Ошибка сохранения пользователя'));
+    res.send(await newUser.save());
   } catch (error) {
     if (error.name === 'ValidationError') {
       res.status(400).send({ message: 'Ошибка валидации полей', ...error });
@@ -48,7 +48,7 @@ const updateUserData = async (req, res) => {
       req.user._id,
       { name, about },
       { new: true, runValidators: true },
-    ).orFail(new Error('Ошибка обновления данных пользователя'));
+    );
     res.send({ update });
   } catch (error) {
     if (error.name === 'ValidationError') {
@@ -66,7 +66,7 @@ const updateAvatar = async (req, res) => {
       req.user._id,
       { avatar },
       { new: true, runValidators: true },
-    ).orFail(new Error('Ошибка обновления аватара пользователя'));
+    );
     res.send({ userAvatar });
   } catch (error) {
     if (error.name === 'ValidationError') {

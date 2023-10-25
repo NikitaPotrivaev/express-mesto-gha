@@ -2,7 +2,7 @@ const Card = require('../models/card');
 
 const getCards = async (req, res) => {
   try {
-    const cards = await Card.find({}).orFail(new Error('Карточки не найдены'));
+    const cards = await Card.find({});
     res.send(cards);
   } catch (error) {
     res.status(500).send({ message: 'Ошибка на стороне сервера' });
@@ -12,7 +12,7 @@ const getCards = async (req, res) => {
 const createCard = async (req, res) => {
   try {
     const { name, link } = req.body;
-    res.send(await Card.create({ name, link, owner: req.user._id })).orFail(new Error('Ошибка создания карточки'));
+    res.send(await Card.create({ name, link, owner: req.user._id }));
   } catch (error) {
     if (error.name === 'ValidationError') {
       res.status(400).send({ message: 'Переданы некорректные данные при создании карточки' });
