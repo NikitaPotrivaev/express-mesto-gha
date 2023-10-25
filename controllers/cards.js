@@ -2,7 +2,7 @@ const Card = require('../models/card');
 
 const getCards = async (req, res) => {
   try {
-    const cards = await Card.find({});
+    const cards = await Card.find({}).orFail(new Error('Карточки не найдены'));
     res.send(cards);
   } catch (error) {
     res.status(500).send({ message: 'Ошибка на стороне сервера' });
@@ -12,12 +12,13 @@ const getCards = async (req, res) => {
 const createCard = async (req, res) => {
   try {
     const { name, link } = req.body;
-    res.send(await Card.create({ name, link, owner: req.user._id }));
+    res.send(await Card.create({ name, link, owner: req.user._id })).orFail(new Error('Ошибка создания карточки'));
   } catch (error) {
     if (error.name === 'ValidationError') {
       res.status(400).send({ message: 'Переданы некорректные данные при создании карточки' });
+    } else {
+      res.status(500).send({ message: 'Ошибка на стороне сервера' });
     }
-    res.status(500).send({ message: 'Ошибка на стороне сервера' });
   }
 };
 
@@ -26,13 +27,15 @@ const deleteCardId = async (req, res) => {
     const cardId = await Card.findByIdAndDelete(req.params.cardId);
     if (!cardId) {
       res.status(404).send({ message: 'Отсутствует данная карточка' });
+    } else {
+      res.send({ cardId });
     }
-    res.send({ cardId });
   } catch (error) {
     if (error.name === 'CastError') {
       res.status(400).send({ message: 'Неверный id' });
+    } else {
+      res.status(500).send({ message: 'Ошибка на стороне сервера' });
     }
-    res.status(500).send({ message: 'Ошибка на стороне сервера' });
   }
 };
 
@@ -45,13 +48,15 @@ const likeCard = async (req, res) => {
     );
     if (!like) {
       res.status(404).send({ message: 'Отсутствует данная карточка' });
+    } else {
+      res.send({ like });
     }
-    res.send({ like });
   } catch (error) {
     if (error.name === 'CastError') {
       res.status(400).send({ message: 'Неверный id' });
+    } else {
+      res.status(500).send({ message: 'Ошибка на стороне сервера' });
     }
-    res.status(500).send({ message: 'Ошибка на стороне сервера' });
   }
 };
 
@@ -64,13 +69,15 @@ const deleteLike = async (req, res) => {
     );
     if (!removeLike) {
       res.status(404).send({ message: 'Отсутствует данная карточка' });
+    } else {
+      res.send({ removeLike });
     }
-    res.send({ removeLike });
   } catch (error) {
     if (error.name === 'CastError') {
-      res.status(400).send({ message: 'Неверные данные' });
+      res.status(400).send({ message: 'Неверный id' });
+    } else {
+      res.status(500).send({ message: 'Ошибка на стороне сервера' });
     }
-    res.status(500).send({ message: 'Ошибка на стороне сервера' });
   }
 };
 
