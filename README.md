@@ -4,9 +4,9 @@
 
 ## Технологии
 
-Express.JS
-Node.js
-Mongodb
+- Express.JS;
+- Node.js;
+- Mongodb;
 
 ## Директории
 
