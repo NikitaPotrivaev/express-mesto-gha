@@ -57,15 +57,15 @@ const likeCard = async (req, res) => {
 
 const deleteLike = async (req, res) => {
   try {
-    const dislike = await Card.findByIdAndUpdate(
+    const removeLike = await Card.findByIdAndUpdate(
       req.params.cardId,
       { $pull: { likes: req.user._id } },
       { new: true },
     );
-    if (!dislike) {
+    if (!removeLike) {
       res.status(404).send({ message: 'Отсутствует данная карточка' });
     }
-    res.send({ dislike });
+    res.send({ removeLike });
   } catch (error) {
     if (error.name === 'CastError') {
       res.status(400).send({ message: 'Неверные данные' });
