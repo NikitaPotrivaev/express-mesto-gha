@@ -2,6 +2,12 @@
 # Проект Mesto фронтенд + бэкенд
 [Express-mesto](https://github.com/NikitaPotrivaev/express-mesto-gha)
 
+## Технологии
+
+Express.JS
+Node.js
+Mongodb
+
 ## Директории
 
 `/routes` — папка с файлами роутера  
