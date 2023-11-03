@@ -1,3 +1,5 @@
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 
 const getUsers = async (req, res) => {
@@ -6,6 +8,23 @@ const getUsers = async (req, res) => {
     res.send(users);
   } catch (error) {
     res.status(500).send({ message: 'Ошибка на стороне сервера' });
+  }
+};
+
+const getUser = async (req, res) => {
+  try {
+    const user = User.find(req.user._id);
+    if (!user) {
+      res.status(404).send({ message: 'Пользователь не найден' });
+    } else {
+      res.send({ user });
+    }
+  } catch (error) {
+    if (error.name === 'CastError') {
+      res.status(400).send({ message: 'Отсутствует пользователь с таким id' });
+    } else {
+      res.status(500).send({ message: 'Ошибка на стороне сервера' });
+    }
   }
 };
 
@@ -27,18 +46,26 @@ const getUserId = async (req, res) => {
   }
 };
 
-const registerUser = async (req, res) => {
-  try {
-    const { name, about, avatar } = req.body;
-    const newUser = new User({ name, about, avatar });
-    res.send(await newUser.save());
-  } catch (error) {
-    if (error.name === 'ValidationError') {
-      res.status(400).send({ message: 'Ошибка валидации полей', ...error });
-    } else {
-      res.status(500).send({ message: 'Ошибка на стороне сервера' });
-    }
-  }
+const registerUser = (req, res) => {
+  const {
+    name, about, avatar, email, password,
+  } = req.body;
+  const passwordHash = bcrypt.hash(password, 10);
+  passwordHash.then((hash) => User.create({
+    name, about, avatar, email, password: hash,
+  }))
+    .then(() => res.send({
+      name, about, avatar, email,
+    }))
+    .catch((error) => {
+      if (error.name === 'ValidationError') {
+        res.status(400).send({ message: 'Ошибка валидации полей', ...error });
+      } else if (error.code === 11000) {
+        res.status(409).send({ message: 'Пользователь уже существует' });
+      } else {
+        res.status(500).send({ message: 'Ошибка на стороне сервера' });
+      }
+    });
 };
 
 const updateUserData = async (req, res) => {
@@ -77,10 +104,32 @@ const updateAvatar = async (req, res) => {
   }
 };
 
+const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
+    const matched = await bcrypt.compare(password, user.password);
+    if (!matched) {
+      res.status(401).send({ message: 'Неверные почта или пароль' });
+    } else {
+      const token = jwt.sign({ _id: user._id }, 'token-generate-key', { expiresIn: '7d' });
+      res.send({ token, email: user.email });
+    }
+  } catch (error) {
+    if (error.name === 'ValidationError') {
+      res.status(400).send({ message: 'Ошибка валидации полей', ...error });
+    } else {
+      res.status(500).send({ message: 'Ошибка на стороне сервера' });
+    }
+  }
+};
+
 module.exports = {
   getUsers,
+  getUser,
   getUserId,
   registerUser,
   updateUserData,
   updateAvatar,
+  login,
 };

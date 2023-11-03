@@ -24,11 +24,14 @@ const createCard = async (req, res) => {
 
 const deleteCardId = async (req, res) => {
   try {
-    const cardId = await Card.findByIdAndDelete(req.params.cardId);
-    if (!cardId) {
+    const card = await Card.findById(req.params.cardId);
+    if (!card) {
       res.status(404).send({ message: 'Отсутствует данная карточка' });
+    } else if ((req.params.cardId) !== (card.owner)) {
+      res.status(403).send({ message: 'Запрещено удалять чужую карточку' });
     } else {
-      res.send({ cardId });
+      const cardId = await Card.findByIdAndDelete(req.params.cardId);
+      res.send({ cardId, message: 'Карточка удалена' });
     }
   } catch (error) {
     if (error.name === 'CastError') {
