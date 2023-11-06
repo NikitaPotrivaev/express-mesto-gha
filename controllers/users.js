@@ -2,51 +2,56 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 
-const getUsers = async (req, res) => {
+const NotFound = require('../utils/NotFound'); // 404
+const ConflictRequest = require('../utils/ConflictRequest'); // 409
+const AuthorizationError = require('../utils/AuthorizationError'); // 401
+const BadRequest = require('../utils/BadRequest'); // 400
+
+const getUsers = async (req, res, next) => {
   try {
     const users = await User.find({});
     res.send(users);
   } catch (error) {
-    res.status(500).send({ message: 'Ошибка на стороне сервера' });
+    next(error);
   }
 };
 
-const getUser = async (req, res) => {
+const getUser = async (req, res, next) => {
   try {
-    const user = User.find(req.user._id);
+    const user = await User.findById(req.user._id);
     if (!user) {
-      res.status(404).send({ message: 'Пользователь не найден' });
+      throw new NotFound('Пользователь не найден');
     } else {
       res.send({ user });
     }
   } catch (error) {
     if (error.name === 'CastError') {
-      res.status(400).send({ message: 'Отсутствует пользователь с таким id' });
+      next(new BadRequest('Отсутствует пользователь с таким id'));
     } else {
-      res.status(500).send({ message: 'Ошибка на стороне сервера' });
+      next(error);
     }
   }
 };
 
-const getUserId = async (req, res) => {
+const getUserId = async (req, res, next) => {
   try {
     const { userId } = req.params;
     const user = await User.findById(userId);
     if (!user) {
-      res.status(404).send({ message: 'Пользователь не найден' });
+      throw new NotFound('Пользователь не найден');
     } else {
       res.send({ user });
     }
   } catch (error) {
     if (error.name === 'CastError') {
-      res.status(400).send({ message: 'Отсутствует пользователь с таким id' });
+      next(new BadRequest('Отсутствует пользователь с таким id'));
     } else {
-      res.status(500).send({ message: 'Ошибка на стороне сервера' });
+      next(error);
     }
   }
 };
 
-const registerUser = (req, res) => {
+const registerUser = (req, res, next) => {
   const {
     name, about, avatar, email, password,
   } = req.body;
@@ -59,16 +64,16 @@ const registerUser = (req, res) => {
     }))
     .catch((error) => {
       if (error.name === 'ValidationError') {
-        res.status(400).send({ message: 'Ошибка валидации полей', ...error });
+        next(new BadRequest('Переданы некорректные данные при создании пользователя'));
       } else if (error.code === 11000) {
-        res.status(409).send({ message: 'Пользователь уже существует' });
+        next(new ConflictRequest('Пользователь уже существует'));
       } else {
-        res.status(500).send({ message: 'Ошибка на стороне сервера' });
+        next(error);
       }
     });
 };
 
-const updateUserData = async (req, res) => {
+const updateUserData = async (req, res, next) => {
   try {
     const { name, about } = req.body;
     const update = await User.findByIdAndUpdate(
@@ -79,14 +84,14 @@ const updateUserData = async (req, res) => {
     res.send({ update });
   } catch (error) {
     if (error.name === 'ValidationError') {
-      res.status(400).send({ message: 'Ошибка валидации полей', ...error });
+      next(new BadRequest('Переданы некорректные данные при обновлении пользователя'));
     } else {
-      res.status(500).send({ message: 'Ошибка на стороне сервера' });
+      next(error);
     }
   }
 };
 
-const updateAvatar = async (req, res) => {
+const updateAvatar = async (req, res, next) => {
   try {
     const { avatar } = req.body;
     const userAvatar = await User.findByIdAndUpdate(
@@ -97,29 +102,29 @@ const updateAvatar = async (req, res) => {
     res.send({ userAvatar });
   } catch (error) {
     if (error.name === 'ValidationError') {
-      res.status(400).send({ message: 'Ошибка валидации полей', ...error });
+      next(new BadRequest('Переданы некорректные данные при обновлении аватара пользователя'));
     } else {
-      res.status(500).send({ message: 'Ошибка на стороне сервера' });
+      next(error);
     }
   }
 };
 
-const login = async (req, res) => {
+const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).select('+password');
     const matched = await bcrypt.compare(password, user.password);
     if (!matched) {
-      res.status(401).send({ message: 'Неверные почта или пароль' });
+      throw new AuthorizationError('Неверные почта или пароль');
     } else {
       const token = jwt.sign({ _id: user._id }, 'token-generate-key', { expiresIn: '7d' });
-      res.send({ token, email: user.email });
+      res.send({ token });
     }
   } catch (error) {
     if (error.name === 'ValidationError') {
-      res.status(400).send({ message: 'Ошибка валидации полей', ...error });
+      next(new BadRequest('Неверные почта или пароль'));
     } else {
-      res.status(500).send({ message: 'Ошибка на стороне сервера' });
+      next(error);
     }
   }
 };
