@@ -121,7 +121,7 @@ const login = async (req, res, next) => {
       res.send({ token });
     }
   } catch (error) {
-    if (error.name === 'ValidationError') {
+    if (error) {
       next(new AuthorizationError('Неверные почта или пароль'));
     } else {
       next(error);
