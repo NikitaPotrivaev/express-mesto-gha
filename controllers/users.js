@@ -59,7 +59,7 @@ const registerUser = (req, res, next) => {
   passwordHash.then((hash) => User.create({
     name, about, avatar, email, password: hash,
   }))
-    .then(() => res.send({
+    .then(() => res.status(201).send({
       name, about, avatar, email,
     }))
     .catch((error) => {

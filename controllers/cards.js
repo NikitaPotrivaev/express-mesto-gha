@@ -16,7 +16,7 @@ const getCards = async (req, res, next) => {
 const createCard = async (req, res, next) => {
   try {
     const { name, link } = req.body;
-    res.send(await Card.create({ name, link, owner: req.user._id }));
+    res.status(201).send(await Card.create({ name, link, owner: req.user._id }));
   } catch (error) {
     if (error.name === 'ValidationError') {
       next(new BadRequest('Переданы некорректные данные при создании карточки'));
@@ -34,7 +34,7 @@ const deleteCardId = async (req, res, next) => {
     } else if (!card.owner.equals(req.user._id)) {
       throw new Forbidden('Запрещено удалять чужую карточку');
     } else {
-      const cardId = await Card.findByIdAndDelete(req.params.cardId);
+      const cardId = await Card.deleteOne(card);
       res.send({ cardId, message: 'Карточка удалена' });
     }
   } catch (error) {
